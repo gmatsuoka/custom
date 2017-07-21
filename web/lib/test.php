@@ -44,4 +44,19 @@ class MercadoPagoTest {
     return $emails_test[$site_id];
   }
 
+  static function getInfoBuyerTest(){
+    $buyer_info_test = array(
+      "firstname" => "APRO",
+      "lastname" => "APRO",
+      "docNumber" => "19119119100",
+      "address" => "Av. das Nações Unidas",
+      "addressnumber" => "3003",
+      "city" => "Osasco",
+      "state" => "SP",
+      "zipcode" => "01508020"
+    );
+
+    return $buyer_info_test;
+  }
+
 }

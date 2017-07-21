@@ -11,9 +11,24 @@
         default: true,
         status: false
       },
+      validate_on: {
+        event: false,
+        keyup: false,
+        paste: true,
+      },
       inputs_to_create_discount: [
         "couponCodeTicket",
         "applyCouponTicket"
+      ],
+      inputs_to_validate_ticket: [
+        "firstname",
+        "lastname",
+        "docNumber",
+        "address",
+        "number",
+        "city",
+        "state",
+        "zipcode"
       ],
       selectors: {
         // coupom
@@ -28,7 +43,22 @@
         paymentMethodId: "#paymentMethodId",
         amount: "#amountTicket",
         // form
-        formCoupon: '#mercadopago-form-coupon-ticket'
+        formCoupon: '#mercadopago-form-coupon-ticket',
+        formTicket: '#form-ticket',
+        box_loading: "#mp-box-loading",
+        submit: "#btnSubmit",
+        form: "#mercadopago-ticket-form-general"
+      },
+      febraban: {
+        // febraban
+        firstname: "#febrabanFirstname",
+        lastname: "#febrabanLastname",
+        docNumber: "#febrabanDocNumber",
+        address: "#febrabanAddress",
+        number: "#febrabanNumber",
+        city: "#febrabanCity",
+        state: "#febrabanState",
+        zipcode: "#febrabanZipcode"
       },
       text: {
         discount_info1: "You will save",
@@ -268,6 +298,96 @@
       }
     }
 
+    // Form validation
+
+    var doSubmitTicket = false;
+
+    MPv1Ticket.doPay = function(febraban) {
+      document.querySelector(MPv1Ticket.febraban.firstname).value = febraban['firstname'];
+      document.querySelector(MPv1Ticket.febraban.lastname).value = febraban['lastname'];
+      document.querySelector(MPv1Ticket.febraban.docNumber).value = febraban['docNumber'];
+      document.querySelector(MPv1Ticket.febraban.address).value = febraban['address'];
+      document.querySelector(MPv1Ticket.febraban.number).value = febraban['number'];
+      document.querySelector(MPv1Ticket.febraban.city).value = febraban['city'];
+      document.querySelector(MPv1Ticket.febraban.state).value = febraban['state'];
+      document.querySelector(MPv1Ticket.febraban.zipcode).value = febraban['zipcode'];
+      if(!doSubmitTicket){
+        doSubmit=true;
+        document.querySelector(MPv1Ticket.selectors.box_loading).style.background = "url("+MPv1Ticket.paths.loading+") 0 50% no-repeat #fff";
+        btn = document.querySelector(MPv1Ticket.selectors.form);
+        btn.submit();
+      }
+    }
+
+    MPv1Ticket.validateInputsTicket = function(event) {
+      event.preventDefault();
+      MPv1Ticket.hideErrors();
+      var valid_to_ticket = true;
+      var $inputs = MPv1Ticket.getForm().querySelectorAll('[data-checkout]');
+      var $inputs_to_validate_ticket = MPv1Ticket.inputs_to_validate_ticket;
+      var febraban = [];
+      var arr = [];
+      for (var x = 0; x < $inputs.length; x++) {
+        var element = $inputs[x];
+        if($inputs_to_validate_ticket.indexOf(element.getAttribute("data-checkout")) > -1){
+          if (element.value == -1 || element.value == "") {
+            arr.push(element.id);
+            valid_to_ticket = false;
+          } else {
+            febraban[element.id] = element.value;
+          }
+        }
+      }
+      if (!valid_to_ticket) {
+        MPv1Ticket.showErrors(arr);
+      } else {
+        MPv1Ticket.doPay(febraban);
+      }
+    }
+
+    MPv1Ticket.getForm = function(){
+      return document.querySelector(MPv1Ticket.selectors.form);
+    }
+
+    MPv1Ticket.addListenerEvent = function(el, eventName, handler){
+      if (el.addEventListener) {
+        el.addEventListener(eventName, handler);
+      } else {
+        el.attachEvent('on' + eventName, function(){
+          handler.call(el);
+        });
+      }
+    };
+
+    // Show/hide errors.
+
+    MPv1Ticket.showErrors = function(fields){
+      var $form = MPv1Ticket.getForm();
+      for(var x = 0; x < fields.length; x++){
+        var f = fields[x];
+        var $span = $form.querySelector('#error_' + f);
+        var $input = $form.querySelector($span.getAttribute("data-main"));
+        $span.style.display = 'inline-block';
+        $input.classList.add("mp-error-input");
+      }
+      return;
+    }
+
+    MPv1Ticket.hideErrors = function(){
+      for(var x = 0; x < document.querySelectorAll('[data-checkout]').length; x++){
+        var $field = document.querySelectorAll('[data-checkout]')[x];
+        $field.classList.remove("mp-error-input");
+      } //end for
+      for(var x = 0; x < document.querySelectorAll('.erro_febraban').length; x++){
+        var $span = document.querySelectorAll('.erro_febraban')[x];
+        $span.style.display = 'none';
+
+      }
+      return;
+    }
+
+    // ===
+
     MPv1Ticket.Initialize = function( site_id, coupon_mode, discount_action_url, payer_email ) {
 
       // Sets.
@@ -285,6 +405,17 @@
         );
       } else {
         document.querySelector( MPv1Ticket.selectors.formCoupon ).style.display = "none";
+      }
+
+      // flow: MLB
+      if (MPv1Ticket.site_id != "MLB") {
+        document.querySelector(MPv1Ticket.selectors.formTicket).style.display = "none";
+      } else {
+        MPv1Ticket.addListenerEvent(
+          document.querySelector(MPv1Ticket.selectors.form),
+          'submit',
+          MPv1Ticket.validateInputsTicket
+        );
       }
 
       return;

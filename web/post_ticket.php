@@ -6,6 +6,25 @@ error_reporting(E_ALL);
 include "lib/mercadopago.php";
 include "lib/test.php";
 
+/*
+	{
+		"coupon_code": "",
+		"paymentMethodId": "bolbradesco",
+		"site_id": "MLB",
+		"amount": "5249.99",
+		"campaign_id": "",
+		"campaign": "",
+		"discount": "",
+		"firstname": "APRO",
+		"lastname": "APRO",
+		"docNumber": "19119119100",
+		"address": "TESTE",
+		"number": "99",
+		"city": "Osasco",
+		"state": "SP",
+		"zipcode": "01508020"
+	}
+*/
 $params_mercadopago = $_REQUEST['mercadopago_ticket'];
 
 $mercadopago = new MP(MercadoPagoTest::getAccessTokenSellerTest($params_mercadopago['site_id']));
@@ -51,20 +70,29 @@ $item['quantity'] = (int) 1;
 $item['unit_price'] = (float) 123.20;
 $payment['additional_info']['items'][] = $item;
 
-// Payer Info
-$payment['additional_info']['payer']['first_name'] = "Comprador";
-$payment['additional_info']['payer']['last_name'] = "Testes";
+// Always Present Payer Info
+$payment['additional_info']['payer']['first_name'] = $params_mercadopago['firstname'];
+$payment['additional_info']['payer']['last_name'] = $params_mercadopago['lastname'];
+$payment['additional_info']['payer']['address']['street_name'] = $params_mercadopago['address'];
+$payment['additional_info']['payer']['address']['street_number'] = (int) $params_mercadopago['number'];
+$payment['additional_info']['payer']['address']['zip_code'] = $params_mercadopago['zipcode'];
+// Not Always Present Info
 $payment['additional_info']['payer']['registration_date'] = "2015-06-02T12:58:41.425-04:00";
 $payment['additional_info']['payer']['phone']['area_code'] = "11";
 $payment['additional_info']['payer']['phone']['number'] = "1234 1234";
-$payment['additional_info']['payer']['address']['street_name'] = "Av Teste";
-$payment['additional_info']['payer']['address']['street_number'] = (int) 123;
-$payment['additional_info']['payer']['address']['zip_code'] = "06541005";
+// MLB Payer Info
+if ($params_mercadopago['site_id']) {
+	$payment['payer']['identification']['type'] = "CPF";
+	$payment['payer']['identification']['number'] = $params_mercadopago['docNumber'];
+}
 
 // Shipments Info
-$payment['additional_info']['shipments']['receiver_address']['zip_code'] = "06541005";
-$payment['additional_info']['shipments']['receiver_address']['street_name'] = "Av Teste";
-$payment['additional_info']['shipments']['receiver_address']['street_number'] = (int) 123;
+$payment['additional_info']['shipments']['receiver_address']['zip_code'] = $params_mercadopago['zipcode'];
+$payment['additional_info']['shipments']['receiver_address']['street_name'] =
+	$params_mercadopago['address'] . " - " .
+	$params_mercadopago['number'] . " - " .
+	$params_mercadopago['state'];
+$payment['additional_info']['shipments']['receiver_address']['street_number'] = (int) $params_mercadopago['number'];
 // $payment['additional_info']['shipments']['receiver_address']['floor'] = (int) "";
 // $payment['additional_info']['shipments']['receiver_address']['apartment'] = "";
 
