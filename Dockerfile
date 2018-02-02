@@ -1,0 +1,2 @@
+FROM nimmis/apache-php7
+WORKDIR /var/www/html
