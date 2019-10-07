@@ -9,6 +9,7 @@ include "lib/mercadopago.php";
 if(!isset($_REQUEST['site_id'])){
   $_REQUEST['site_id'] = "MLA";
 }
+
 $payer_email = MercadoPagoTest::getEmailBuyerTest($_REQUEST['site_id']);
 $mercadopago = new MP(MercadoPagoTest::getAccessTokenSellerTest($_REQUEST['site_id']));
 $customer = $mercadopago->get_or_create_customer($payer_email);
